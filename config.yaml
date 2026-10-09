@@ -1,5 +1,5 @@
 data:
-  target_column: "HasDetections"
+  target_column: "target"
   id_column: "MachineID"
   train_path: "data/train.csv"
   test_path: "data/test.csv"
