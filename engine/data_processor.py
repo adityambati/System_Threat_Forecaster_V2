@@ -7,7 +7,7 @@ from engine.utils import reduce_mem_usage
 
 
 class DataProcessor:
-    """Handles feature engineering, dot-separated version parsing, date extraction, and type casting."""
+    """Handles feature engineering, version parsing, hardware ratios, and frequency encoding."""
 
     def __init__(self, config: dict):
         self.config = config
@@ -46,6 +46,54 @@ class DataProcessor:
         except Exception as e:
             raise ThreatForecasterException(e, sys)
 
+    def add_domain_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Engineers system hardware ratios and capacity metrics."""
+        try:
+            # 1. RAM per Core Ratio
+            if (
+                "TotalPhysicalRAMMB" in df.columns
+                and "ProcessorCoreCount" in df.columns
+            ):
+                df["RAM_per_Core"] = (
+                    df["TotalPhysicalRAMMB"] / (df["ProcessorCoreCount"] + 1e-5)
+                ).astype(np.float32)
+
+            # 2. Disk Storage Utilization Ratio
+            if (
+                "SystemVolumeCapacityMB" in df.columns
+                and "PrimaryDiskCapacityMB" in df.columns
+            ):
+                df["Disk_Space_Ratio"] = (
+                    df["SystemVolumeCapacityMB"] / (df["PrimaryDiskCapacityMB"] + 1e-5)
+                ).astype(np.float32)
+
+            # 3. Screen Resolution Pixel Count
+            if (
+                "PrimaryDisplayResolutionHorizontal" in df.columns
+                and "PrimaryDisplayResolutionVertical" in df.columns
+            ):
+                df["Screen_Pixel_Area"] = (
+                    df["PrimaryDisplayResolutionHorizontal"]
+                    * df["PrimaryDisplayResolutionVertical"]
+                ).astype(np.float32)
+
+            # 4. Frequency Encoding for High-Cardinality IDs
+            freq_cols = [
+                "CityID",
+                "OEMNameID",
+                "OEMModelID",
+                "ProcessorModelID",
+                "AvSigVersion",
+            ]
+            for col in freq_cols:
+                if col in df.columns:
+                    freq = df[col].value_counts()
+                    df[f"{col}_freq"] = df[col].map(freq).fillna(0).astype(np.float32)
+
+            return df
+        except Exception as e:
+            raise ThreatForecasterException(e, sys)
+
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Executes full transformation pipeline."""
         try:
@@ -53,8 +101,9 @@ class DataProcessor:
             df = df.copy()
             df = self.parse_versions(df)
             df = self.parse_dates(df)
+            df = self.add_domain_features(df)
 
-            # Cast remaining text/object features to category dtype for LightGBM/CatBoost
+            # Cast text features to categorical type for LightGBM
             cat_cols = df.select_dtypes(include=["object"]).columns
             for col in cat_cols:
                 df[col] = df[col].astype("category")

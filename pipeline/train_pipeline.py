@@ -22,9 +22,11 @@ class TrainPipeline:
             logger.info("=== Starting Training Pipeline Execution ===")
 
             # 1. Load Raw Datasets
-            train_path = self.config['data']['train_path']
-            test_path = self.config['data']['test_path']
-            logger.info(f"Loading train data from {train_path} and test data from {test_path}...")
+            train_path = self.config["data"]["train_path"]
+            test_path = self.config["data"]["test_path"]
+            logger.info(
+                f"Loading train data from {train_path} and test data from {test_path}..."
+            )
 
             train_df = pd.read_csv(train_path)
             test_df = pd.read_csv(test_path)
@@ -34,8 +36,8 @@ class TrainPipeline:
                 raise ValueError("Training dataset failed schema validation checks.")
 
             # 3. Separate Targets & Identifiers
-            target_col = self.config['data']['target_column']
-            id_col = self.config['data']['id_column']
+            target_col = self.config["data"]["target_column"]
+            id_col = self.config["data"]["id_column"]
 
             y = train_df[target_col]
             X_train = train_df.drop(columns=[target_col])
@@ -54,13 +56,20 @@ class TrainPipeline:
 
             # Align feature columns between train and test
             X_train_transformed, X_test_transformed = X_train_transformed.align(
-                X_test_transformed, join='left', axis=1
+                X_test_transformed, join="left", axis=1
             )
 
-            # 5. Model Training & Cross-Validation
-            logger.info("Executing model training and validation...")
-            oof_preds, test_preds, oof_auc, oof_acc = self.trainer.train_cross_validation(
-                X_train_transformed, y, X_test_transformed
+            # 5. Hyperparameter Tuning & Cross-Validation Training
+            logger.info("Running Optuna hyperparameter optimization...")
+            best_params = self.trainer.optimize_lightgbm(
+                X_train_transformed, y, n_trials=10
+            )
+
+            logger.info("Executing tuned model training and cross-validation...")
+            oof_preds, test_preds, oof_auc, oof_acc = (
+                self.trainer.train_cross_validation(
+                    X_train_transformed, y, X_test_transformed, params=best_params
+                )
             )
 
             # 6. Save Submission Artifact

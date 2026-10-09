@@ -73,6 +73,7 @@ class ModelTrainer:
                     X_tr,
                     y_tr,
                     eval_set=[(X_va, y_val)],
+                    eval_metric="binary_logloss",
                     callbacks=[lgb.early_stopping(30, verbose=False)],
                 )
                 preds = model.predict_proba(X_va)[:, 1]
