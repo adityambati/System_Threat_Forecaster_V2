@@ -1,0 +1,19 @@
+data:
+  target_column: "HasDetections"
+  id_column: "MachineIdentifier"
+  train_path: "data/train.csv"
+  test_path: "data/test.csv"
+
+features:
+  version_columns:
+    - "EngineVersion"
+    - "AppVersion"
+    - "AvSigVersion"
+  date_columns:
+    - "DateAS"
+    - "DateOS"
+
+artifacts:
+  model_dir: "artifacts/models/"
+  transformer_dir: "artifacts/transformers/"
+  metrics_dir: "artifacts/metrics/"
