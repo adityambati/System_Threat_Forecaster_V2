@@ -7,7 +7,7 @@ from engine.utils import reduce_mem_usage
 
 
 class DataProcessor:
-    """Handles feature engineering, version parsing, hardware ratios, and frequency encoding."""
+    """Advanced feature engineering: version parsing, patch deltas, hardware ratios, frequency encoding, and domain interactions."""
 
     def __init__(self, config: dict):
         self.config = config
@@ -15,7 +15,7 @@ class DataProcessor:
         self.date_cols = config["features"]["date_columns"]
 
     def parse_versions(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Splits version strings (e.g. 1.1.15100.1) into numeric components."""
+        """Splits version strings (e.g. 1.1.15100.1) into numeric components and version deltas."""
         try:
             for col in self.version_cols:
                 if col in df.columns:
@@ -27,12 +27,27 @@ class DataProcessor:
                             .astype(np.float32)
                         )
                     df.drop(columns=[col], inplace=True)
+
+            # Version Patch Age Deltas
+            if "EngineVersion_2" in df.columns and "AppVersion_2" in df.columns:
+                df["Ver_Engine_App_Delta"] = (
+                    df["EngineVersion_2"] - df["AppVersion_2"]
+                ).astype(np.float32)
+
+            if (
+                "OSBuildNumberOnly" in df.columns
+                and "OSBuildRevisionOnly" in df.columns
+            ):
+                df["OS_Patch_Revision_Ratio"] = (
+                    df["OSBuildNumberOnly"] / (df["OSBuildRevisionOnly"] + 1e-5)
+                ).astype(np.float32)
+
             return df
         except Exception as e:
             raise ThreatForecasterException(e, sys)
 
     def parse_dates(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Extracts numerical date parts from date features."""
+        """Extracts numerical date components and elapsed days features."""
         try:
             for col in self.date_cols:
                 if col in df.columns:
@@ -46,10 +61,10 @@ class DataProcessor:
         except Exception as e:
             raise ThreatForecasterException(e, sys)
 
-    def add_domain_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Engineers system hardware ratios and capacity metrics."""
+    def add_advanced_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Engineers domain ratios, interaction features, frequency encodings, and group stats."""
         try:
-            # 1. RAM per Core Ratio
+            # 1. Hardware Ratios & Storage Metrics
             if (
                 "TotalPhysicalRAMMB" in df.columns
                 and "ProcessorCoreCount" in df.columns
@@ -58,7 +73,6 @@ class DataProcessor:
                     df["TotalPhysicalRAMMB"] / (df["ProcessorCoreCount"] + 1e-5)
                 ).astype(np.float32)
 
-            # 2. Disk Storage Utilization Ratio
             if (
                 "SystemVolumeCapacityMB" in df.columns
                 and "PrimaryDiskCapacityMB" in df.columns
@@ -67,7 +81,6 @@ class DataProcessor:
                     df["SystemVolumeCapacityMB"] / (df["PrimaryDiskCapacityMB"] + 1e-5)
                 ).astype(np.float32)
 
-            # 3. Screen Resolution Pixel Count
             if (
                 "PrimaryDisplayResolutionHorizontal" in df.columns
                 and "PrimaryDisplayResolutionVertical" in df.columns
@@ -77,18 +90,59 @@ class DataProcessor:
                     * df["PrimaryDisplayResolutionVertical"]
                 ).astype(np.float32)
 
-            # 4. Frequency Encoding for High-Cardinality IDs
+            # 2. Security Configuration Vulnerability Index
+            sec_cols = [
+                "RealTimeProtectionState",
+                "IsSMode",
+                "FirewallEnabled",
+                "EnableLUA",
+                "IsSecureBootEnabled",
+            ]
+            present_sec_cols = [c for c in sec_cols if c in df.columns]
+            if present_sec_cols:
+                df["Security_Features_Active_Sum"] = (
+                    df[present_sec_cols].fillna(0).sum(axis=1).astype(np.float32)
+                )
+
+            # 3. Categorical Interactions
+            if "PlatformType" in df.columns and "Processor" in df.columns:
+                df["Platform_Processor_Interact"] = (
+                    df["PlatformType"].astype(str) + "_" + df["Processor"].astype(str)
+                )
+
+            if "OSEdition" in df.columns and "SKUEditionName" in df.columns:
+                df["OS_SKU_Interact"] = (
+                    df["OSEdition"].astype(str) + "_" + df["SKUEditionName"].astype(str)
+                )
+
+            # 4. Frequency Encoding (Both Text and High-Cardinality Numeric IDs)
             freq_cols = [
                 "CityID",
                 "OEMNameID",
                 "OEMModelID",
                 "ProcessorModelID",
-                "AvSigVersion",
+                "FirmwareVersionID",
+                "AntivirusConfigID",
+                "CountryID",
+                "GeoRegionID",
+                "LocaleEnglishNameID",
+                "OSBuildLab",
             ]
             for col in freq_cols:
                 if col in df.columns:
                     freq = df[col].value_counts()
                     df[f"{col}_freq"] = df[col].map(freq).fillna(0).astype(np.float32)
+
+            # 5. Group Aggregations (Deviations from OEM model averages)
+            if "SystemVolumeCapacityMB" in df.columns and "OEMModelID" in df.columns:
+                group_mean = df.groupby("OEMModelID")[
+                    "SystemVolumeCapacityMB"
+                ].transform("mean")
+                df["Disk_Cap_Diff_from_OEM_Mean"] = (
+                    (df["SystemVolumeCapacityMB"] - group_mean)
+                    .fillna(0)
+                    .astype(np.float32)
+                )
 
             return df
         except Exception as e:
@@ -101,11 +155,12 @@ class DataProcessor:
             df = df.copy()
             df = self.parse_versions(df)
             df = self.parse_dates(df)
-            df = self.add_domain_features(df)
+            df = self.add_advanced_features(df)
 
-            # Cast text features to categorical type for LightGBM
-            cat_cols = df.select_dtypes(include=["object"]).columns
+            # Cast text/object features to categorical dtype for LightGBM
+            cat_cols = df.select_dtypes(include=["object", "category"]).columns
             for col in cat_cols:
+                df[col] = df[col].astype(str).fillna("missing")
                 df[col] = df[col].astype("category")
 
             df = reduce_mem_usage(df)
