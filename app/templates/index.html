@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Threat Forecaster V2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+        .btn-primary { background-color: #3b82f6; border: none; padding: 12px 24px; font-weight: 600; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .upload-area { border: 2px dashed #475569; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .upload-area:hover { border-color: #3b82f6; background-color: #1e293b; }
+    </style>
+</head>
+<body class="d-flex align-items-center vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+                <div class="card p-5 shadow-lg">
+                    <h2 class="text-center fw-bold mb-3 text-info">🛡️ System Threat Forecaster V2</h2>
+                    <p class="text-center text-muted mb-4">Enterprise Malware Susceptibility & Threat Prediction Engine</p>
+
+                    {% if error_message %}
+                    <div class="alert alert-danger mb-4" role="alert">
+                        {{ error_message }}
+                    </div>
+                    {% endif %}
+
+                    <form action="/predict" method="post" enctype="multipart/form-data">
+                        <div class="upload-area mb-4" onclick="document.getElementById('fileInput').click();">
+                            <h5 class="mb-2 text-light">Drop Telemetry CSV File Here</h5>
+                            <p class="text-secondary small">or click to browse from computer (e.g., test.csv)</p>
+                            <input type="file" id="fileInput" name="file" accept=".csv" class="d-none" required onchange="showFileName(this)">
+                            <div id="fileName" class="text-info fw-bold mt-2"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Analyze System Vulnerability</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showFileName(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('fileName').innerText = "Selected: " + input.files[0].name;
+            }
+        }
+    </script>
+</body>
+</html>
