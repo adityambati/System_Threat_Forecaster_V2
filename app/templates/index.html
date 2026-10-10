@@ -3,49 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Threat Forecaster V2</title>
+    <title>System Threat Forecaster V2 | SOC Command Center</title>
+    <!-- Modern Futuristic & Monospace Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; }
-        .btn-primary { background-color: #3b82f6; border: none; padding: 12px 24px; font-weight: 600; }
-        .btn-primary:hover { background-color: #2563eb; }
-        .upload-area { border: 2px dashed #475569; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .upload-area:hover { border-color: #3b82f6; background-color: #1e293b; }
+        :root {
+            --bg-deep: #030712;
+            --cyber-blue: #38bdf8;
+            --cyber-emerald: #10b981;
+            --cyber-glow: rgba(56, 189, 248, 0.15);
+            --border-glass: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.1) 0px, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0px, transparent 40%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+            color: #f3f4f6;
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .command-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .header-banner {
+            text-align: center;
+            margin-bottom: 32px;
+            max-width: 700px;
+        }
+
+        .system-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--cyber-blue);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 14px;
+        }
+
+        .title-main {
+            font-size: 2.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+        }
+
+        .title-sub {
+            font-family: 'JetBrains Mono', monospace;
+            color: #94a3b8;
+            font-size: 0.925rem;
+        }
+
+        .glass-console {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+
+        .glass-console::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(100, 116, 139, 0.4);
+            border-radius: 14px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(3, 7, 18, 0.4);
+        }
+
+        .drop-zone:hover {
+            border-color: var(--cyber-blue);
+            background: rgba(56, 189, 248, 0.04);
+            box-shadow: 0 0 20px var(--cyber-glow);
+        }
+
+        .file-status {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyber-blue);
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .format-hint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        .btn-cyber {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 14px;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-cyber:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+            border-color: var(--cyber-blue);
+            box-shadow: 0 6px 25px rgba(56, 189, 248, 0.5);
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+
+        .telemetry-ticker {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 16px;
+        }
+
+        .alert-cyber {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            border-radius: 10px;
+        }
     </style>
 </head>
-<body class="d-flex align-items-center vh-100">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-7">
-                <div class="card p-5 shadow-lg">
-                    <h2 class="text-center fw-bold mb-3 text-info">🛡️ System Threat Forecaster V2</h2>
-                    <p class="text-center text-muted mb-4">Enterprise Malware Susceptibility & Threat Prediction Engine</p>
+<body>
+    <div class="command-wrapper">
+        <!-- Title & Subtitle Outside the Box -->
+        <div class="header-banner">
+            <div class="system-badge">🛡️ Production MLOps Pipeline</div>
+            <h1 class="title-main">System Threat Forecaster</h1>
+            <p class="title-sub">// MACHINE LEARNING ENGINE TO DETECT WINDOWS SYSTEM MALWARE</p>
+        </div>
 
-                    {% if error_message %}
-                    <div class="alert alert-danger mb-4" role="alert">
-                        {{ error_message }}
-                    </div>
-                    {% endif %}
+        <!-- Glassmorphism Upload Console -->
+        <div class="glass-console">
+            {% if error_message %}
+            <div class="alert alert-cyber p-3 mb-4" role="alert">
+                [ERROR]: {{ error_message }}
+            </div>
+            {% endif %}
 
-                    <form action="/predict" method="post" enctype="multipart/form-data">
-                        <div class="upload-area mb-4" onclick="document.getElementById('fileInput').click();">
-                            <h5 class="mb-2 text-light">Drop Telemetry CSV File Here</h5>
-                            <p class="text-secondary small">or click to browse from computer (e.g., test.csv)</p>
-                            <input type="file" id="fileInput" name="file" accept=".csv" class="d-none" required onchange="showFileName(this)">
-                            <div id="fileName" class="text-info fw-bold mt-2"></div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Analyze System Vulnerability</button>
-                    </form>
+            <form action="/predict" method="post" enctype="multipart/form-data">
+                <div class="drop-zone mb-4" onclick="document.getElementById('fileInput').click();" id="dropZone">
+                    <div style="font-size: 2.2rem; margin-bottom: 12px;">🖥️</div>
+                    <h5 class="fw-bold text-light mb-1" style="font-size: 1.05rem;">Upload Computer System Data (CSV)</h5>
+                    <p class="text-secondary small mb-1">Drag and drop your dataset file or click to browse</p>
+                    <div class="format-hint">Required format: CSV containing Windows hardware & OS features (e.g. test.csv)</div>
+                    <input type="file" id="fileInput" name="file" accept=".csv" class="d-none" required onchange="onFileSelected(this)">
+                    <div id="fileDisplay" class="file-status"></div>
                 </div>
+
+                <button type="submit" class="btn btn-cyber w-100">
+                    ANALYZE SYSTEM THREATS
+                </button>
+            </form>
+
+            <div class="telemetry-ticker">
+                <span>ENGINE: LIGHTGBM</span>
+                <span>STATUS: ONLINE</span>
+                <span>OOF_AUC: 0.6826</span>
             </div>
         </div>
     </div>
 
     <script>
-        function showFileName(input) {
+        function onFileSelected(input) {
             if (input.files && input.files[0]) {
-                document.getElementById('fileName').innerText = "Selected: " + input.files[0].name;
+                const name = input.files[0].name;
+                document.getElementById('fileDisplay').innerText = `> LOADED: ${name} [READY FOR SCAN]`;
+                document.getElementById('dropZone').style.borderColor = "#10b981";
+                document.getElementById('dropZone').style.background = "rgba(16, 185, 129, 0.03)";
             }
         }
     </script>
