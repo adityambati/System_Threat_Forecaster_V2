@@ -6,14 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import (
-    roc_auc_score,
-    accuracy_score,
-    confusion_matrix,
-    classification_report,
-)
+from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
 import lightgbm as lgb
-import xgboost as xgb
 import optuna
 import shap
 
@@ -21,12 +15,12 @@ from engine.logger import logger
 from engine.exception import ThreatForecasterException
 from engine.utils import save_object
 
-# Silence Optuna logs by default unless error
+# Silence Optuna logs
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
 class ModelTrainer:
-    """Handles cross-validation, hyperparameter tuning via Optuna, model evaluation, and SHAP interpretability."""
+    """Handles cross-validation, LightGBM hyperparameter tuning via Optuna, model evaluation, and SHAP interpretability."""
 
     def __init__(self, config: dict):
         self.config = config
@@ -36,9 +30,9 @@ class ModelTrainer:
         os.makedirs(self.metrics_dir, exist_ok=True)
 
     def optimize_lightgbm(
-        self, X: pd.DataFrame, y: pd.Series, n_trials: int = 15
+        self, X: pd.DataFrame, y: pd.Series, n_trials: int = 10
     ) -> dict:
-        """Uses Optuna to tune LightGBM hyperparameters."""
+        """Uses Optuna to tune LightGBM hyperparameters efficiently."""
         logger.info(
             f"Starting Optuna hyperparameter optimization ({n_trials} trials)..."
         )
@@ -50,14 +44,14 @@ class ModelTrainer:
                 "boosting_type": "gbdt",
                 "verbosity": -1,
                 "learning_rate": trial.suggest_float(
-                    "learning_rate", 0.01, 0.1, log=True
+                    "learning_rate", 0.02, 0.1, log=True
                 ),
-                "num_leaves": trial.suggest_int("num_leaves", 15, 127),
-                "max_depth": trial.suggest_int("max_depth", 3, 12),
-                "feature_fraction": trial.suggest_float("feature_fraction", 0.5, 1.0),
-                "bagging_fraction": trial.suggest_float("bagging_fraction", 0.5, 1.0),
-                "bagging_freq": trial.suggest_int("bagging_freq", 1, 7),
-                "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
+                "num_leaves": trial.suggest_int("num_leaves", 31, 127),
+                "max_depth": trial.suggest_int("max_depth", 5, 12),
+                "feature_fraction": trial.suggest_float("feature_fraction", 0.6, 1.0),
+                "bagging_fraction": trial.suggest_float("bagging_fraction", 0.6, 1.0),
+                "bagging_freq": trial.suggest_int("bagging_freq", 1, 5),
+                "min_child_samples": trial.suggest_int("min_child_samples", 20, 100),
                 "random_state": 42,
             }
 
@@ -83,9 +77,8 @@ class ModelTrainer:
         study = optuna.create_study(direction="maximize")
         study.optimize(objective, n_trials=n_trials)
         logger.info(f"Optuna Best Trial ROC-AUC: {study.best_value:.5f}")
-        logger.info(f"Best Hyperparameters: {study.best_params}")
 
-        # Save best parameters to JSON artifact
+        # Save best parameters
         param_file = os.path.join(self.metrics_dir, "best_lightgbm_params.json")
         with open(param_file, "w") as f:
             json.dump(study.best_params, f, indent=4)
@@ -100,9 +93,9 @@ class ModelTrainer:
         params: dict = None,
         n_splits: int = 5,
     ):
-        """Executes Stratified K-Fold Cross Validation and saves model artifacts."""
+        """Executes Fast Stratified K-Fold CV using LightGBM."""
         try:
-            logger.info(f"Initiating {n_splits}-Fold Stratified Cross-Validation...")
+            logger.info(f"Initiating {n_splits}-Fold Cross-Validation with LightGBM...")
             skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 
             oof_preds = np.zeros(len(X))
@@ -113,10 +106,15 @@ class ModelTrainer:
                 "objective": "binary",
                 "metric": "binary_logloss",
                 "boosting_type": "gbdt",
-                "learning_rate": 0.05,
-                "num_leaves": 31,
+                "learning_rate": 0.03,
+                "num_leaves": 127,
+                "max_depth": 10,
+                "min_child_samples": 30,
+                "feature_fraction": 0.7,
+                "bagging_fraction": 0.8,
+                "bagging_freq": 1,
                 "random_state": 42,
-                "n_estimators": 1000,
+                "n_estimators": 1200,
                 "verbose": -1,
             }
 
@@ -149,10 +147,10 @@ class ModelTrainer:
             overall_auc = roc_auc_score(y, oof_preds)
             overall_acc = accuracy_score(y, (oof_preds >= 0.5).astype(int))
             logger.info(
-                f"OOF Overall ROC-AUC: {overall_auc:.5f} | Overall Accuracy: {overall_acc:.5f}"
+                f"OOF Overall LightGBM ROC-AUC: {overall_auc:.5f} | Overall Accuracy: {overall_acc:.5f}"
             )
 
-            # Save primary best model (fold 1 model or last trained)
+            # Save primary LightGBM model artifact
             best_model_path = os.path.join(self.model_dir, "lightgbm_model.pkl")
             save_object(best_model_path, models[0])
 
@@ -167,12 +165,12 @@ class ModelTrainer:
     def _generate_eval_artifacts(
         self, y_true: pd.Series, y_probs: np.ndarray, model, X_sample: pd.DataFrame
     ):
-        """Generates confusion matrix, ROC curve, and SHAP feature importance plots."""
+        """Generates confusion matrix and SHAP feature importance plots."""
         try:
-            logger.info("Generating model evaluation plots and SHAP analysis...")
+            logger.info("Generating evaluation plots and SHAP analysis...")
             y_pred = (y_probs >= 0.5).astype(int)
 
-            # 1. Confusion Matrix
+            # Confusion Matrix
             cm = confusion_matrix(y_true, y_pred)
             plt.figure(figsize=(6, 5))
             sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
@@ -183,8 +181,7 @@ class ModelTrainer:
             plt.savefig(os.path.join(self.metrics_dir, "confusion_matrix.png"))
             plt.close()
 
-            # 2. SHAP Interpretability Analysis
-            logger.info("Computing SHAP values for feature importance...")
+            # SHAP Analysis
             explainer = shap.TreeExplainer(model)
             sample_subset = X_sample.sample(min(1000, len(X_sample)), random_state=42)
             shap_values = explainer.shap_values(sample_subset)
@@ -197,10 +194,6 @@ class ModelTrainer:
             plt.tight_layout()
             plt.savefig(os.path.join(self.metrics_dir, "shap_summary.png"))
             plt.close()
-
-            logger.info(
-                "Evaluation plots and SHAP summary successfully saved to artifacts/metrics/"
-            )
 
         except Exception as e:
             logger.warning(f"Could not generate complete evaluation plots: {str(e)}")
