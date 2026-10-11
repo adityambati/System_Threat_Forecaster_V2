@@ -4,6 +4,7 @@ import io
 import pandas as pd
 from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
 
 from pipeline.predict_pipeline import PredictPipeline
@@ -68,6 +69,7 @@ async def predict_file(request: Request, file: UploadFile = File(...)):
         results_df.to_csv(temp_csv_path, index=False)
 
         preview_data = results_df.head(20).to_dict(orient="records")
+        all_records = results_df.to_dict(orient="records")
 
         return templates.TemplateResponse(
             request,
@@ -79,6 +81,7 @@ async def predict_file(request: Request, file: UploadFile = File(...)):
                 "clean_count": clean_count,
                 "risk_percentage": risk_percentage,
                 "preview_data": preview_data,
+                "all_records": all_records,
             },
         )
 
@@ -89,16 +92,11 @@ async def predict_file(request: Request, file: UploadFile = File(...)):
         )
 
 
-@app.get("/download")
+@app.get("/download-predictions")
 async def download_predictions():
-    """Provides CSV download of predicted risk scores."""
-    temp_csv_path = "artifacts/predictions/latest_predictions.csv"
-    if os.path.exists(temp_csv_path):
-        return StreamingResponse(
-            open(temp_csv_path, "rb"),
-            media_type="text/csv",
-            headers={
-                "Content-Disposition": "attachment; filename=threat_predictions.csv"
-            },
+    file_path = "artifacts/predictions/latest_predictions.csv"
+    if os.path.exists(file_path):
+        return FileResponse(
+            file_path, media_type="text/csv", filename="threat_predictions.csv"
         )
-    return {"error": "No prediction results available for download."}
+    return {"error": "Prediction file not found. Run a scan first."}
