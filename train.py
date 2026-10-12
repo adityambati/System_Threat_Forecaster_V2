@@ -1,0 +1,9 @@
+import warnings
+
+warnings.filterwarnings("ignore")
+
+from pipeline.train_pipeline import TrainPipeline
+
+if __name__ == "__main__":
+    pipeline = TrainPipeline()
+    pipeline.run()

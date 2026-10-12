@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Threat Forecaster V2 | SOC Command Center</title>
+    <!-- High-Tech Typography: Orbitron, Rajdhani, Share Tech Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-obsidian: #08090d;
+            --hazard-amber: #f59e0b;
+            --threat-red: #ef4444;
+            --amber-glow: rgba(245, 158, 11, 0.2);
+            --border-tactical: rgba(245, 158, 11, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.1) 0px, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(239, 68, 68, 0.08) 0px, transparent 40%),
+                radial-gradient(rgba(245, 158, 11, 0.15) 1.5px, transparent 1.5px);
+            background-size: 100% 100%, 100% 100%, 26px 26px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .top-right-container {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        /* Uniform sizing and layout for top-right components */
+        .top-action-btn {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.775rem;
+            letter-spacing: 0.08em;
+            width: 160px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            box-sizing: border-box;
+        }
+
+        .architect-tag span {
+            color: var(--hazard-amber);
+            font-weight: 700;
+        }
+
+        .btn-stats-geeks {
+            color: var(--hazard-amber);
+            background: rgba(19, 12, 1, 0.4);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            text-transform: uppercase;
+            transition: all 0.25s ease;
+        }
+
+        .btn-stats-geeks:hover {
+            color: #000000;
+            background: var(--hazard-amber);
+            border-color: var(--hazard-amber);
+            box-shadow: 0 0 15px var(--amber-glow);
+        }
+
+        .command-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .header-banner {
+            text-align: center;
+            margin-bottom: 24px;
+            max-width: 750px;
+        }
+
+        .system-badge {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.775rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            background: rgba(245, 158, 11, 0.08);
+            color: var(--hazard-amber);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            padding: 5px 14px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .title-main {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            color: #ffffff;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .title-main .highlight-threat {
+            color: var(--threat-red);
+            text-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+        }
+
+        .title-sub {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--text-secondary);
+            font-size: 0.925rem;
+            letter-spacing: 0.05em;
+        }
+
+        .glass-console {
+            background: rgba(13, 16, 24, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-tactical);
+            border-radius: 8px;
+            padding: 32px 36px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.85);
+            position: relative;
+        }
+
+        .glass-console::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(239, 68, 68, 0.15) 60%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(245, 158, 11, 0.35);
+            border-radius: 6px;
+            padding: 26px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(8, 9, 13, 0.6);
+        }
+
+        .drop-zone:hover {
+            border-color: var(--hazard-amber);
+            background: rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 22px var(--amber-glow);
+        }
+
+        .file-status {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--hazard-amber);
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+
+        .format-hint {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.775rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+            background: rgba(8, 9, 13, 0.8);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sample-download-box {
+            margin-top: 14px;
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.825rem;
+            color: var(--text-secondary);
+        }
+
+        .sample-download-box a {
+            color: var(--hazard-amber);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.2s ease;
+        }
+
+        .sample-download-box a:hover {
+            color: #fbbf24;
+            text-decoration: underline;
+        }
+
+        .btn-tactical {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #000000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 14px;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 18px rgba(217, 119, 6, 0.35);
+            margin-top: 16px;
+            text-transform: uppercase;
+        }
+
+        .btn-tactical:hover {
+            background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+            border-color: #fa0202;
+            box-shadow: 0 6px 22px rgba(245, 158, 11, 0.5);
+            transform: translateY(-1px);
+            color: #000000;
+        }
+
+        .telemetry-ticker {
+            margin-top: 20px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 16px;
+        }
+
+        .ticker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .ticker-item {
+            background: rgba(8, 9, 13, 0.6);
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .ticker-label {
+            color: #64748b;
+            font-size: 0.675rem;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .ticker-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .status-dot {
+            height: 7px;
+            width: 7px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10b981;
+            margin-right: 5px;
+            animation: pulse-emerald 2s infinite;
+        }
+
+        @keyframes pulse-emerald {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .alert-tactical {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            padding: 10px !important;
+            margin-bottom: 16px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-right-container">
+        <div class="top-action-btn btn-stats-geeks">
+            <span>ADITYA AMBATI</span>
+        </div>
+        <a href="/analytics" class="top-action-btn btn-stats-geeks">
+            MODEL STATS
+        </a>
+    </div>
+
+    <div class="command-wrapper">
+        <div class="header-banner">
+            <div class="system-badge">Production Machine Learning Pipeline</div>
+            <h1 class="title-main">System <span class="highlight-threat">Threat</span> Forecaster</h1>
+            <p class="title-sub">// MACHINE LEARNING ENGINE TO DETECT WINDOWS SYSTEM MALWARE</p>
+        </div>
+
+        <div class="glass-console">
+            {% if error_message %}
+            <div class="alert alert-tactical" role="alert">
+                [ERROR]: {{ error_message }}
+            </div>
+            {% endif %}
+
+            <form action="/predict" method="post" enctype="multipart/form-data">
+                <div class="drop-zone mb-2" onclick="document.getElementById('fileInput').click();" id="dropZone">
+                    <div style="font-size: 2rem; margin-bottom: 6px;">🖥️</div>
+                    <h5 class="fw-bold text-light mb-1" style="font-family: 'Orbitron', sans-serif; font-size: 1rem;">Upload Computer System Dataset</h5>
+                    <p class="text-secondary small mb-1" style="font-size: 0.825rem;">Drag and drop your CSV file or click to browse</p>
+                    
+                    <div class="format-hint">
+                        <strong>Expected Schema:</strong> CSV containing 75 features (e.g. <code>MachineID</code>, <code>AppVersion</code>, <code>EngineVersion</code>, <code>Processor</code>, <code>TotalPhysicalRAMMB</code>)
+                    </div>
+
+                    <input type="file" id="fileInput" name="file" accept=".csv" class="d-none" required onchange="onFileSelected(this)">
+                    <div id="fileDisplay" class="file-status"></div>
+                </div>
+
+                <div class="sample-download-box">
+                    Don't have a dataset? <a href="https://drive.google.com/file/d/1JNn0qL-lhTK0aUc1LvsmgGH7WnBLDCj5/view?usp=sharing" target="_blank">Download sample test file here</a>
+                </div>
+
+                <button type="submit" class="btn btn-tactical w-100">
+                    ANALYZE SYSTEM THREATS
+                </button>
+            </form>
+
+            <div class="telemetry-ticker">
+                <div class="ticker-grid">
+                    <div class="ticker-item">
+                        <span class="ticker-label">MODEL USED</span>
+                        <span class="ticker-value" style="color: var(--hazard-amber);">LightGBM</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">DETECTION MODE</span>
+                        <span class="ticker-value">Real-Time ML</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">FEATURE SCHEMA</span>
+                        <span class="ticker-value">75 Metrics</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">ALERT THRESHOLD</span>
+                        <span class="ticker-value">&ge; 0.35</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">OUTPUT</span>
+                        <span class="ticker-value">TBA</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">SYSTEM STATUS</span>
+                        <span class="ticker-value"><span class="status-dot"></span>ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function onFileSelected(input) {
+            if (input.files && input.files[0]) {
+                const name = input.files[0].name;
+                document.getElementById('fileDisplay').innerText = `> LOADED: ${name} [READY FOR SCAN]`;
+                document.getElementById('dropZone').style.borderColor = "#f59e0b";
+                document.getElementById('dropZone').style.background = "rgba(245, 158, 11, 0.05)";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 data:
-  target_column: "HasDetections"
-  id_column: "MachineIdentifier"
+  target_column: "target"
+  id_column: "MachineID"
   train_path: "data/train.csv"
   test_path: "data/test.csv"
 
@@ -8,7 +8,9 @@ features:
   version_columns:
     - "EngineVersion"
     - "AppVersion"
-    - "AvSigVersion"
+    - "SignatureVersion"
+    - "NumericOSVersion"
+    - "OSVersion"
   date_columns:
     - "DateAS"
     - "DateOS"
