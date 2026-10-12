@@ -1,10 +1,6 @@
 venv/
 __pycache__/
 *.pyc
-data/*.csv
 !data/.gitkeep
 logs/*.log
-artifacts/models/*
-artifacts/transformers/*
-artifacts/metrics/*
 .pytest_cache/
