@@ -1,19 +1,21 @@
 import os
 import sys
 import io
+import json
 import pandas as pd
 from fastapi import FastAPI, Request, File, UploadFile
-from fastapi.responses import StreamingResponse
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from pipeline.predict_pipeline import PredictPipeline
 from engine.logger import logger
 
 app = FastAPI(title="System Threat Forecaster V2")
 
-# Setup templates directory
+# Setup templates directory & static artifacts mount
 templates = Jinja2Templates(directory="app/templates")
+app.mount("/artifacts", StaticFiles(directory="artifacts"), name="artifacts")
 
 # Initialize Predict Pipeline
 predict_pipeline = PredictPipeline()
@@ -23,6 +25,27 @@ predict_pipeline = PredictPipeline()
 async def home(request: Request):
     """Renders the dashboard upload page."""
     return templates.TemplateResponse(request, "index.html", {"error_message": None})
+
+
+@app.get("/analytics")
+async def stats_for_geeks(request: Request):
+    """Renders the Stats for Geeks model analytics page."""
+    params_path = "artifacts/metrics/best_lightgbm_params.json"
+    best_params = {}
+    if os.path.exists(params_path):
+        with open(params_path, "r") as f:
+            best_params = json.load(f)
+
+    return templates.TemplateResponse(
+        request,
+        "analytics.html",
+        {
+            "best_params": json.dumps(best_params, indent=4),
+            "model_type": "LightGBM Classifier",
+            "eval_metric": "Stratified K-Fold ROC-AUC",
+            "decision_threshold": "0.35",
+        },
+    )
 
 
 @app.post("/predict")
