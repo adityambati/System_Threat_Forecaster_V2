@@ -322,7 +322,7 @@
             </div>
             {% endif %}
 
-            <form action="/predict" method="post" enctype="multipart/form-data">
+            <form action="/predict" method="post" enctype="multipart/form-data" id="uploadForm">
                 <div class="drop-zone mb-2" onclick="document.getElementById('fileInput').click();" id="dropZone">
                     <div style="font-size: 2rem; margin-bottom: 6px;">🖥️</div>
                     <h5 class="fw-bold text-light mb-1" style="font-family: 'Orbitron', sans-serif; font-size: 1rem;">Upload Computer System Dataset</h5>
@@ -340,7 +340,7 @@
                     Don't have a dataset? <a href="https://drive.google.com/file/d/1JNn0qL-lhTK0aUc1LvsmgGH7WnBLDCj5/view?usp=sharing" target="_blank">Download sample test file here</a>
                 </div>
 
-                <button type="submit" class="btn btn-tactical w-100">
+                <button type="submit" id="submitBtn" class="btn btn-tactical w-100">
                     ANALYZE SYSTEM THREATS
                 </button>
             </form>
@@ -365,7 +365,7 @@
                     </div>
                     <div class="ticker-item">
                         <span class="ticker-label">OUTPUT</span>
-                        <span class="ticker-value">TBA</span>
+                        <span class="ticker-value">Threat Probability and Classification</span>
                     </div>
                     <div class="ticker-item">
                         <span class="ticker-label">SYSTEM STATUS</span>
@@ -380,11 +380,25 @@
         function onFileSelected(input) {
             if (input.files && input.files[0]) {
                 const name = input.files[0].name;
+                document.formatDisplay = true;
                 document.getElementById('fileDisplay').innerText = `> LOADED: ${name} [READY FOR SCAN]`;
                 document.getElementById('dropZone').style.borderColor = "#f59e0b";
                 document.getElementById('dropZone').style.background = "rgba(245, 158, 11, 0.05)";
             }
         }
+
+        // Intercept form submission to change button text only when a valid file is present
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('fileInput');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Verify that a file is actually selected before changing state
+            if (fileInput.files && fileInput.files.length > 0) {
+                submitBtn.innerHTML = "ANALYZING DATA...";
+                submitBtn.style.opacity = "0.85";
+                submitBtn.style.cursor = "wait";
+            }
+        });
     </script>
 </body>
 </html>
