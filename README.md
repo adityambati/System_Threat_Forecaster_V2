@@ -6,7 +6,7 @@
 ![Optuna](https://img.shields.io/badge/Optuna-Hyperparameter%20Tuning-purple)
 ![SHAP](https://img.shields.io/badge/SHAP-Explainability-yellow)
 
-**System Threat Forecaster V2** is an enterprise-grade, end-to-end Machine Learning pipeline designed to detect Windows system malware and security vulnerabilities from telemetry data.
+**System Threat Forecaster V2** is a production grade, end-to-end Machine Learning pipeline designed to predict, the probability and risk of Windows system malware and security vulnerabilities from system data.
 
 Test it out live here: [**LIVE DEMO**](https://system-threat-forecaster-v2.onrender.com/)
 
