@@ -19,7 +19,7 @@ Test it out live here: [**LIVE DEMO**](https://system-threat-forecaster-v2.onren
 * **Robust Cross-Validation & Interpretability**: Employs Stratified K-Fold training using **LightGBM** coupled with **SHAP** tree explainers and out-of-fold confusion matrix evaluations.
 * **Validated Model Performance**: Achieves robust cross-validation benchmark results with an **Overall OOF ROC-AUC : 0.68015** and an **Overall Accuracy : 0.63018**.
 * **Modular Pipeline Architecture**: Clean separation of concerns with dedicated ingestion, validation, processing, training, and inference pipelines.
-* **Industry Ready User Interface (`index.html`, `results.html`, `analytics.html`)**: Features glassmorphic dark-mode dashboards, interactive dropzones, animated probability distribution histograms with threshold lines, full-dataset search capabilities, and a **"Stats for Geeks"** model telemetry view.
+* **Industry Ready User Interface (`index.html`, `results.html`, `analytics.html`)**: Features glassmorphic dark-mode dashboards, interactive dropzones, animated probability distribution histograms with threshold lines, full-dataset search capabilities.
 
 ---
 
