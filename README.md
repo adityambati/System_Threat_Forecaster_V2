@@ -29,32 +29,33 @@ Test it out live here: [**LIVE DEMO**](https://system-threat-forecaster-v2.onren
 System_Threat_Forecaster_V2/
 │
 ├── app/
-│   ├── main.py               # FastAPI web server and routing
+│   ├── main.py                         # FastAPI web server and routing
 │   └── templates/
-│       ├── index.html        # Main SOC command center upload portal
-│       ├── analytics.html    # Model related statistics.
-│       └── results.html      # Interactive threat analysis & search dashboard
+│       ├── index.html                  # Main upload portal page.
+│       ├── analytics.html              # Model related statistics.
+│       └── results.html                # Interactive threat analysis & search dashboard
 ├── artifacts/
-│   ├── metrics/              # Evaluation plots (SHAP, confusion matrix) & best params
-│   ├── models/               # Serialized model binaries (.pkl)
-│   └── predictions/          # Generated inference CSV outputs
+│   ├── metrics/                        # Evaluation plots (SHAP, confusion matrix) & best params
+│   ├── models/                         # Serialized model binaries (.pkl)
+│   └── predictions/                    # Generated inference CSV outputs
 │
-├── data/                     # Training and testing datasets
-├── engine/                   # Core pipeline logic & utilities
-│   ├── data_processor.py     # Feature engineering & memory optimization
-│   ├── exception.py          # Custom error traceback handler
-│   ├── logger.py             # Centralized timestamped logging
-│   ├── trainer.py            # Optuna tuning, LightGBM CV & SHAP
-│   ├── utils.py              # YAML reader & joblib serialization
-│   └── validator.py          # Schema and target integrity checks
+├── data/                               # Training and testing datasets
+├── engine/                             # Core pipeline logic & utilities
+│   ├── data_processor.py               # Feature engineering & memory optimization
+│   ├── exception.py                    # Custom error traceback handler
+│   ├── logger.py                       # Centralized timestamped logging
+│   ├── trainer.py                      # Optuna tuning, LightGBM CV & SHAP
+│   ├── utils.py                        # YAML reader & joblib serialization
+│   └── validator.py                    # Schema and target integrity checks
 │
-├── pipeline/                 # End-to-end pipeline orchestration
-│   ├── predict_pipeline.py   # Production inference pipeline
-│   └── train_pipeline.py     # Full training execution pipeline
+├── pipeline/                           # End-to-end pipeline orchestration
+│   ├── predict_pipeline.py             # Production inference pipeline
+│   └── train_pipeline.py               # Full training execution pipeline
 │
-├── config.yaml               # Centralized configuration mapping
-├── train.py                  # Training entry point script
-└── requirements.txt          # Project dependencies
+├── config.yaml                         # Centralized configuration mapping
+├── train.py                            # Training entry point script
+├── 21f3000274-notebook-t12025.ipynb    # Original notebook containing EDA, data pipelines and model experiments.
+└── requirements.txt                    # Project dependencies
 ```
 
 ---
